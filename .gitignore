@@ -1,0 +1,68 @@
+# .gitignore for a .NET / Visual Studio project
+
+# Build Folders
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# VSCode
+.vscode/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+project.lock.json
+project.assets.json
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+*.db-journal
+
+# Test results
+TestResults/
+*.trx
+
+# Deployment
+publish/
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Others
+*.pdb
+*.dll
+*.exe
+*.cache
+*.ilk
+*.obj
+*.log
+*.vspscc
+*.vssscc
+
+# JetBrains Rider local history
+.idea/
+
+# Ignore generated ref folders seen in obj
+**/ref/
+**/refint/
+
+# Local appsettings for development (uncomment if you keep secrets locally)
+# appsettings.Development.json
