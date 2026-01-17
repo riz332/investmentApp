@@ -1,0 +1,13 @@
+﻿namespace InvestmentApp.Domain;
+
+public class Customer
+{
+    public Guid CustomerId { get; set; }
+    public string FirstName { get; set; } = default!;
+    public string LastName { get; set; } = default!;
+    public string Email { get; set; } = default!;
+    public string? Phone { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public ICollection<Portfolio> Portfolios { get; set; } = new List<Portfolio>();
+}
