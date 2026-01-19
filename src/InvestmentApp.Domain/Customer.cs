@@ -13,6 +13,17 @@ public class Customer
 
     public Portfolio CreatePortfolio(string name, string? description)
     {
-        throw new NotImplementedException();
+        var portfolio = new Portfolio
+        {
+            PortfolioId = Guid.NewGuid(),
+            CustomerId = this.CustomerId,
+            Name = name,
+            Description = description,
+            CreatedAt = DateTime.UtcNow,
+            Customer = this
+        };
+
+        Portfolios.Add(portfolio);
+        return portfolio;
     }
 }

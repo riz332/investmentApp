@@ -36,17 +36,25 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         CreateMap<PortfolioHolding, HoldingResponse>()
-            .ForMember(dest => dest.Symbol, opt => opt.MapFrom(src => src.Asset.Symbol));
+            .ForMember(dest => dest.Symbol, opt => opt.MapFrom(src => src.Asset != null ? src.Asset.Symbol : string.Empty));
 
         CreateMap<Transaction, TransactionResponse>()
-            .ForMember(dest => dest.Symbol, opt => opt.MapFrom(src => src.Asset.Symbol))
-            // Transaction.TransactionType is now an int FK; convert it to the enum used by the DTO
+            .ForMember(dest => dest.Symbol, opt => opt.MapFrom(src => src.Asset != null ? src.Asset.Symbol : string.Empty))
+            // Transaction.TransactionType is an int FK; convert to enum for DTO
             .ForMember(dest => dest.Type, opt => opt.MapFrom(src => (TransactionType)src.TransactionType));
 
         CreateMap<Portfolio, PortfolioResponse>()
-            // record constructor parameter names match property names; AutoMapper will bind them.
             .ForMember(dest => dest.Holdings, opt => opt.MapFrom(src => src.Holdings))
             .ForMember(dest => dest.Transactions, opt => opt.MapFrom(src => src.Transactions));
+
+        // Customer mappings
+        CreateMap<Domain.Customer, CustomerResponse>()
+            .ForMember(dest => dest.Portfolios, opt => opt.MapFrom(src => src.Portfolios));
+
+        CreateMap<CreateCustomerRequest, Domain.Customer>()
+            .ForMember(dest => dest.CustomerId, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.Portfolios, opt => opt.Ignore());
 
         // Portfolio -> PerformanceResponse uses a converter because it contains custom aggregation logic
         CreateMap<Portfolio, PerformanceResponse>().ConvertUsing<PortfolioToPerformanceConverter>();

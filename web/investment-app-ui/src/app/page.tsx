@@ -28,14 +28,16 @@ export default function Home() {
 
     async function loadCustomers() {
       try {
-        const res = await fetch("/api/customers");
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5002";
+        const res = await fetch(`${API_BASE}/api/customers`);
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         const data = await res.json();
         if (mounted) {
-          setCustomers(Array.isArray(data) ? data : []);
+          setCustomers(Array.isArray(data) ? (data as Customer[]) : []);
         }
-      } catch (err: any) {
-        if (mounted) setError(err.message || "Failed to fetch customers");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (mounted) setError(msg || "Failed to fetch customers");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -71,13 +73,13 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
-                {customers.map((c, i) => {
-                  const id = (c as any).customerId ?? (c as any).CustomerId ?? i;
-                  const first = (c as any).firstName ?? (c as any).FirstName ?? "";
-                  const last = (c as any).lastName ?? (c as any).LastName ?? "";
-                  const email = (c as any).email ?? (c as any).Email ?? "";
-                  const phone = (c as any).phone ?? (c as any).Phone ?? "";
-                  const created = (c as any).createdAt ?? (c as any).CreatedAt ?? null;
+                {customers.map((c: Customer, i: number) => {
+                  const id = (c.customerId ?? c.CustomerId) ?? String(i);
+                  const first = c.firstName ?? c.FirstName ?? "";
+                  const last = c.lastName ?? c.LastName ?? "";
+                  const email = c.email ?? c.Email ?? "";
+                  const phone = c.phone ?? c.Phone ?? "";
+                  const created = c.createdAt ?? c.CreatedAt ?? null;
 
                   return (
                     <tr key={id} className="hover:bg-gray-50">

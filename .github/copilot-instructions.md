@@ -16,3 +16,5 @@
 
 ## Project-Specific Rules
 - Add `Microsoft.Extensions.Configuration` packages to the Infrastructure project when `DesignTimeDbContextFactory` requires `ConfigurationBuilder`.
+- Prefer returning DTOs from controllers and using AutoMapper to map EF entities to DTOs instead of returning EF entities directly to avoid JSON cycles and expose stable API shapes. Update `CustomersController` to map `Customer` entity to `CustomerResponse` DTO and `CreateCustomerRequest` to `Customer` for POST requests. When returning data from controllers, map EF entities to DTOs using AutoMapper and return DTOs instead of returning EF entities directly to avoid JSON cycles and expose stable API shapes. Include related portfolios, holdings, transactions, and assets when querying to expose stable API shapes. Update `CustomersController` to return `CustomerResponse` DTOs and eager-load related data.
+- Tests should deserialize API responses into DTO types (e.g., `CustomerResponse`) instead of domain entities; update `CustomersControllerTests` accordingly.
