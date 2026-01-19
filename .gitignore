@@ -66,3 +66,7 @@ Thumbs.db
 
 # Local appsettings for development (uncomment if you keep secrets locally)
 # appsettings.Development.json
+
+# Ignore diagnostics output from test host
+diagnostics*.txt
+diagnostics.host*.txt
