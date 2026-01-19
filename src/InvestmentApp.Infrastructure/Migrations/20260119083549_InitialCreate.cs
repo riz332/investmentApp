@@ -43,6 +43,18 @@ namespace InvestmentApp.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TransactionTypes",
+                columns: table => new
+                {
+                    TransactionTypeId = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TransactionTypes", x => x.TransactionTypeId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AssetPrices",
                 columns: table => new
                 {
@@ -118,7 +130,7 @@ namespace InvestmentApp.Infrastructure.Migrations
                     TransactionId = table.Column<Guid>(type: "uuid", nullable: false),
                     PortfolioId = table.Column<Guid>(type: "uuid", nullable: false),
                     AssetId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TransactionType = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    TransactionType = table.Column<int>(type: "integer", maxLength: 10, nullable: false),
                     Quantity = table.Column<decimal>(type: "numeric(18,6)", nullable: false),
                     PricePerUnit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
@@ -139,6 +151,12 @@ namespace InvestmentApp.Infrastructure.Migrations
                         principalTable: "Portfolios",
                         principalColumn: "PortfolioId",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Transactions_TransactionTypes_TransactionType",
+                        column: x => x.TransactionType,
+                        principalTable: "TransactionTypes",
+                        principalColumn: "TransactionTypeId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -181,6 +199,11 @@ namespace InvestmentApp.Infrastructure.Migrations
                 name: "IX_Transactions_PortfolioId",
                 table: "Transactions",
                 column: "PortfolioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_TransactionType",
+                table: "Transactions",
+                column: "TransactionType");
         }
 
         /// <inheritdoc />
@@ -200,6 +223,9 @@ namespace InvestmentApp.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Portfolios");
+
+            migrationBuilder.DropTable(
+                name: "TransactionTypes");
 
             migrationBuilder.DropTable(
                 name: "Customers");

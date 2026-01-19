@@ -11,4 +11,9 @@ public class Portfolio
     public Customer Customer { get; set; } = default!;
     public ICollection<PortfolioHolding> Holdings { get; set; } = new List<PortfolioHolding>();
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+    public void ApplyTransaction(string symbol, decimal quantity, decimal price, TransactionType type)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -10,4 +10,9 @@ public class Customer
     public DateTime CreatedAt { get; set; }
 
     public ICollection<Portfolio> Portfolios { get; set; } = new List<Portfolio>();
+
+    public Portfolio CreatePortfolio(string name, string? description)
+    {
+        throw new NotImplementedException();
+    }
 }

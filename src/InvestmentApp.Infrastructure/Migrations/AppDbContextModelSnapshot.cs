@@ -199,10 +199,10 @@ namespace InvestmentApp.Infrastructure.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<string>("TransactionType")
-                        .IsRequired()
+                    b.Property<int>("TransactionType")
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("integer")
+                        .HasColumnName("TransactionType");
 
                     b.HasKey("TransactionId");
 
@@ -210,7 +210,24 @@ namespace InvestmentApp.Infrastructure.Migrations
 
                     b.HasIndex("PortfolioId");
 
+                    b.HasIndex("TransactionType");
+
                     b.ToTable("Transactions");
+                });
+
+            modelBuilder.Entity("InvestmentApp.Domain.TransactionTypeLookup", b =>
+                {
+                    b.Property<int>("TransactionTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("TransactionTypeId");
+
+                    b.ToTable("TransactionTypes", (string)null);
                 });
 
             modelBuilder.Entity("InvestmentApp.Domain.AssetPrice", b =>
@@ -268,9 +285,17 @@ namespace InvestmentApp.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("InvestmentApp.Domain.TransactionTypeLookup", "TransactionTypeLookup")
+                        .WithMany("Transactions")
+                        .HasForeignKey("TransactionType")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Asset");
 
                     b.Navigation("Portfolio");
+
+                    b.Navigation("TransactionTypeLookup");
                 });
 
             modelBuilder.Entity("InvestmentApp.Domain.Asset", b =>
@@ -291,6 +316,11 @@ namespace InvestmentApp.Infrastructure.Migrations
                 {
                     b.Navigation("Holdings");
 
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("InvestmentApp.Domain.TransactionTypeLookup", b =>
+                {
                     b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
