@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
 using FluentAssertions;
 using InvestmentApp.Api.DTOs;
-using Xunit;
 
 namespace InvestmentApp.Api.Tests;
 
