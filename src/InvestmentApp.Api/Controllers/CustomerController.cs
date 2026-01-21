@@ -2,25 +2,29 @@ using AutoMapper;
 using InvestmentApp.Api.DTOs;
 using InvestmentApp.Domain;
 using InvestmentApp.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace InvestmentApp.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CustomersController : ControllerBase
+[Authorize]
+public class CustomerController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IMapper _mapper;
 
-    public CustomersController(AppDbContext db, IMapper mapper)
+    public CustomerController(AppDbContext db, IMapper mapper)
     {
         _db = db;
         _mapper = mapper;
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<CustomerResponse>>> GetCustomers()
     {
         var customers = await _db.Customers
@@ -50,11 +54,18 @@ public class CustomersController : ControllerBase
 
         if (customer is null) return NotFound();
 
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (customer.CustomerId.ToString() != userId)
+        {
+            return Forbid();
+        }
+
         var dto = _mapper.Map<CustomerResponse>(customer);
         return Ok(dto);
     }
 
     [HttpPost]
+    [Authorize(Roles="Admin")]
     public async Task<ActionResult<CustomerResponse>> CreateCustomer(CreateCustomerRequest request)
     {
         var customer = _mapper.Map<Customer>(request);

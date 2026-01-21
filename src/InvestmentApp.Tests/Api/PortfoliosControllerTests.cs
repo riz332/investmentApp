@@ -78,7 +78,7 @@ public class PortfoliosControllerTests : IClassFixture<CustomWebApplicationFacto
     [Fact]
     public async Task CreatePortfolio_ReturnsCreated_And_Listed()
     {
-        using var client = _factory.CreateClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync();
 
         var email = $"bob.{Guid.NewGuid():N}@example.com";
         var customerId = await CreateTestCustomerAsync(client, email);
@@ -104,7 +104,7 @@ public class PortfoliosControllerTests : IClassFixture<CustomWebApplicationFacto
     [Fact]
     public async Task GetPortfolio_NotFound_Returns404()
     {
-        using var client = _factory.CreateClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync();
 
         var missingId = Guid.NewGuid();
         var resp = await client.GetAsync($"/api/portfolios/{missingId}");

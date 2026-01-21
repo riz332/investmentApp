@@ -3,17 +3,19 @@ using InvestmentApp.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InvestmentApp.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PortfoliosController : ControllerBase
+[Authorize]
+public class PortfolioController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IMapper _mapper;
 
-    public PortfoliosController(AppDbContext db, IMapper mapper)
+    public PortfolioController(AppDbContext db, IMapper mapper)
     {
         _db = db;
         _mapper = mapper;

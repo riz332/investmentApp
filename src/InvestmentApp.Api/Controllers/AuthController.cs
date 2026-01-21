@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using InvestmentApp.Domain;
 using InvestmentApp.Infrastructure;
 using InvestmentApp.Api.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InvestmentApp.Api.Controllers;
 
@@ -66,6 +63,47 @@ public class AuthController : ControllerBase
 
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded) return BadRequest(result.Errors);
+
+        await _userManager.AddToRoleAsync(user, "User");
+
+        var token = await GenerateJwtToken(user);
+        return Ok(token);
+    }
+
+    [HttpPost("registerAdmin")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<AuthResponse>> RegisterAdmin(RegisterRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest(new { error = "Email and Password are required." });
+
+        var existing = await _userManager.FindByEmailAsync(request.Email);
+        if (existing is not null) return BadRequest(new { error = "Email already in use." });
+
+        // Create domain Customer if name info present (optional)
+        var customer = new Customer
+        {
+            CustomerId = Guid.NewGuid(),
+            Email = request.Email,
+            FirstName = request.FirstName ?? string.Empty,
+            LastName = request.LastName ?? string.Empty,
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.Customers.Add(customer);
+        await _db.SaveChangesAsync();
+
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = request.Email,
+            Email = request.Email,
+            CustomerId = customer.CustomerId
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+        if (!result.Succeeded) return BadRequest(result.Errors);
+
+        await _userManager.AddToRoleAsync(user, "Admin");
 
         var token = await GenerateJwtToken(user);
         return Ok(token);

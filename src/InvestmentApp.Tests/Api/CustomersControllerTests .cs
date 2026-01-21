@@ -18,7 +18,7 @@ public class CustomersControllerTests : IClassFixture<CustomWebApplicationFactor
     [Fact]
     public async Task CreateCustomer_IsCreated_ThenListed()
     {
-        using var client = _factory.CreateClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync(asAdmin: true);
 
         var payload = new
         {
@@ -42,7 +42,7 @@ public class CustomersControllerTests : IClassFixture<CustomWebApplicationFactor
     [Fact]
     public async Task GetCustomers_ReturnsEmptyOrMore()
     {
-        using var client = _factory.CreateClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync(asAdmin: true);
 
         var resp = await client.GetAsync("/api/customers");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -56,7 +56,7 @@ public class CustomersControllerTests : IClassFixture<CustomWebApplicationFactor
     [Fact]
     public async Task GetCustomers_ReturnsSeededCustomers()
     {
-        using var client = _factory.CreateClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync(asAdmin: true);
 
         var response = await client.GetAsync("/api/customers");
 
