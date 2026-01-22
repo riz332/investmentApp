@@ -10,5 +10,7 @@ public class ApplicationUser : IdentityUser<Guid>
     public Guid? CustomerId { get; set; }
     public Customer? Customer { get; set; }
 
+    public bool MustChangePassword { get; set; }
+
     // Add any application-specific properties here, e.g. DisplayName, TimeZone, etc.
 }
