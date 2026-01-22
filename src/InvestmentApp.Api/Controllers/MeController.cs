@@ -22,13 +22,19 @@ namespace InvestmentApp.Api.Controllers
             _db = db;
         }
 
-
         [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> CreateMyCustomer(CreateCustomerRequest request)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if(userId == null)
+                return Unauthorized();
+
             var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return Unauthorized();
 
             if (user.CustomerId != null)
                 return BadRequest("Customer profile already exists.");
@@ -51,19 +57,5 @@ namespace InvestmentApp.Api.Controllers
 
             return CreatedAtAction(nameof(CustomerResponse), new { id = customer.CustomerId }, customer);
         }
-
-        [Authorize]
-        public async Task<IActionResult> GetMyCustomer()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userManager.FindByIdAsync(userId);
-
-            if (user.CustomerId == null)
-                return NotFound("No customer profile found.");
-
-            var customer = await _db.Customers.FindAsync(user.CustomerId);
-            return Ok(customer);
-        }
-
     }
 }

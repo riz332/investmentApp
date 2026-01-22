@@ -1,9 +1,10 @@
-﻿using InvestmentApp.Api.DTOs;
+﻿using AutoMapper;
+using InvestmentApp.Api.DTOs;
 using InvestmentApp.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace InvestmentApp.Api.Controllers;
 
@@ -25,6 +26,12 @@ public class PortfolioController : ControllerBase
     [HttpGet("customer/{customerId:guid}")]
     public async Task<ActionResult<IEnumerable<PortfolioResponse>>> GetCustomerPortfolios(Guid customerId)
     {
+        var loggedInCustomerId = await GetLoggedInCustomerIdAsync();
+
+        // If not admin, enforce ownership
+        if (!User.IsInRole("Admin") && loggedInCustomerId != customerId)
+            return Forbid();
+
         var portfolios = await _db.Portfolios
             .Include(p => p.Holdings).ThenInclude(h => h.Asset)
             .Include(p => p.Transactions).ThenInclude(t => t.Asset)
@@ -47,6 +54,11 @@ public class PortfolioController : ControllerBase
         if (portfolio == null)
             return NotFound();
 
+        var loggedInCustomerId = await GetLoggedInCustomerIdAsync();
+
+        if (!User.IsInRole("Admin") && portfolio.CustomerId != loggedInCustomerId)
+            return Forbid();
+
         return Ok(_mapper.Map<PortfolioResponse>(portfolio));
     }
 
@@ -54,6 +66,11 @@ public class PortfolioController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<PortfolioResponse>> CreatePortfolio(CreatePortfolioRequest request)
     {
+        var loggedInCustomerId = await GetLoggedInCustomerIdAsync();
+
+        if (!User.IsInRole("Admin") && loggedInCustomerId != request.CustomerId)
+            return Forbid();
+
         var customer = await _db.Customers
             .Include(c => c.Portfolios)
             .FirstOrDefaultAsync(c => c.CustomerId == request.CustomerId);
@@ -66,7 +83,8 @@ public class PortfolioController : ControllerBase
         _db.Portfolios.Add(portfolio);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetPortfolio), new { portfolioId = portfolio.PortfolioId },
+        return CreatedAtAction(nameof(GetPortfolio),
+            new { portfolioId = portfolio.PortfolioId },
             _mapper.Map<PortfolioResponse>(portfolio));
     }
 
@@ -81,6 +99,11 @@ public class PortfolioController : ControllerBase
 
         if (portfolio == null)
             return NotFound("Portfolio not found");
+
+        var loggedInCustomerId = await GetLoggedInCustomerIdAsync();
+
+        if (!User.IsInRole("Admin") && portfolio.CustomerId != loggedInCustomerId)
+            return Forbid();
 
         var asset = await _db.Assets.FirstOrDefaultAsync(a => a.AssetId == request.AssetId);
         if (asset == null)
@@ -112,5 +135,15 @@ public class PortfolioController : ControllerBase
 
         var response = _mapper.Map<PerformanceResponse>(portfolio);
         return Ok(response);
+    }
+
+    private async Task<Guid?> GetLoggedInCustomerIdAsync()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return null;
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+        return user?.CustomerId;
     }
 }
