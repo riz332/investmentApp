@@ -40,22 +40,17 @@ builder.Services.AddSwaggerGen();
 // Register AutoMapper profiles (optional: keeps DI-based mapping available)
 builder.Services.AddAutoMapper(cfg => { }, typeof(InvestmentApp.Api.Mappers.MappingProfile).Assembly);
 
-if (builder.Environment.IsEnvironment("Testing"))
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseInMemoryDatabase("TestDb"));
-}
-else
+if (!builder.Environment.IsEnvironment("Testing"))
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString));
-}
 
-// Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+    // Identity
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+        .AddEntityFrameworkStores<AppDbContext>()
+        .AddDefaultTokenProviders();
+}
 
 // Ensure JWT configuration exists (read from user-secrets / env / appsettings)
 var jwtKey = builder.Configuration["Jwt:Key"];

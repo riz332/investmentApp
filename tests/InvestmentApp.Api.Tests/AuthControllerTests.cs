@@ -5,20 +5,14 @@ using Xunit;
 
 namespace InvestmentApp.Api.Tests;
 
-public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class AuthControllerTests
 {
-    private readonly CustomWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public AuthControllerTests(CustomWebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-        _client = _factory.CreateClient();
-    }
-
     [Fact]
     public async Task Register_ValidRequest_ReturnsToken()
     {
+        await using var factory = new CustomWebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
+        
         var request = new RegisterRequest
         {
             Email = $"test{Guid.NewGuid()}@example.com",
@@ -27,7 +21,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory<Pro
             LastName = "User"
         };
 
-        var response = await _client.PostAsJsonAsync("/api/auth/register", request);
+        var response = await client.PostAsJsonAsync("/api/auth/register", request);
         
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
@@ -40,6 +34,9 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory<Pro
     [Fact]
     public async Task Login_ValidCredentials_ReturnsToken()
     {
+        await using var factory = new CustomWebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
+        
         var email = $"login{Guid.NewGuid()}@example.com";
         
         // First register a user
@@ -50,7 +47,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory<Pro
             FirstName = "Login",
             LastName = "User"
         };
-        await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
+        await client.PostAsJsonAsync("/api/auth/register", registerRequest);
 
         // Then login
         var loginRequest = new LoginRequest
@@ -59,7 +56,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory<Pro
             Password = "Test123!"
         };
 
-        var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+        var response = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
         
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
@@ -72,13 +69,16 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory<Pro
     [Fact]
     public async Task Login_InvalidCredentials_ReturnsUnauthorized()
     {
+        await using var factory = new CustomWebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
+        
         var loginRequest = new LoginRequest
         {
             Email = "nonexistent@example.com",
             Password = "WrongPassword"
         };
 
-        var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+        var response = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
         
         Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
     }
