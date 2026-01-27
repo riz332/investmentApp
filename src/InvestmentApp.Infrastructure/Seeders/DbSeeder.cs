@@ -51,8 +51,8 @@ public static class DbSeeder
         RoleManager<IdentityRole<Guid>> roleManager,
         IConfiguration config)
     {
-        var adminEmail = config["SeedAdmin:Email"];
-        var adminPassword = config["SeedAdmin:Password"];
+        var adminEmail = config["SeedAdmin:Email"] ?? "admin@investmentapp.local";
+        var adminPassword = config["SeedAdmin:Password"] ?? "Admin123!";
         var adminRole = config["SeedAdmin:Role"] ?? "Admin";
 
         if (!await roleManager.RoleExistsAsync(adminRole))

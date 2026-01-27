@@ -4,4 +4,7 @@
     <Project Path="src/InvestmentApp.Domain/InvestmentApp.Domain.csproj" />
     <Project Path="src/InvestmentApp.Infrastructure/InvestmentApp.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InvestmentApp.Api.Tests/InvestmentApp.Api.Tests.csproj" />
+  </Folder>
 </Solution>

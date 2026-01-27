@@ -1,3 +1,4 @@
+using InvestmentApp.Domain;
 using InvestmentApp.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -39,9 +40,17 @@ builder.Services.AddSwaggerGen();
 // Register AutoMapper profiles (optional: keeps DI-based mapping available)
 builder.Services.AddAutoMapper(cfg => { }, typeof(InvestmentApp.Api.Mappers.MappingProfile).Assembly);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseInMemoryDatabase("TestDb"));
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(connectionString));
+}
 
 // Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
@@ -52,6 +61,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    jwtKey ??= TestConstants.JwtKey;
+    jwtIssuer ??= TestConstants.JwtIssuer;
+    jwtAudience ??= TestConstants.JwtAudience;
+}
 
 if (string.IsNullOrWhiteSpace(jwtKey))
     throw new InvalidOperationException("Jwt:Key is not configured. Set it in user-secrets or environment variables.");
@@ -88,13 +104,16 @@ var app = builder.Build();
 
 await SeedRolesAsync(app);
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-    await DbSeeder.SeedAsync(db, userManager, roleManager, config);
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        await DbSeeder.SeedAsync(db, userManager, roleManager, config);
+    }
 }
 
 if (app.Environment.IsDevelopment())
