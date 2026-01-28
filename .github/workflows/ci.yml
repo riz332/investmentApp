@@ -13,6 +13,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
 
     steps:
     - uses: actions/checkout@v4
@@ -37,7 +40,7 @@ jobs:
       run: npm run build --if-present
       working-directory: ./web/investment-app-ui
     - name: Test
-      run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
     - name: Test UI
       run: npm test --if-present
       working-directory: ./web/investment-app-ui
@@ -48,3 +51,10 @@ jobs:
         name: Test Results
         path: "**/test-results.trx"
         reporter: dotnet-trx
+    - name: Report code coverage
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Code Coverage
+        path: "**/coverage.cobertura.xml"
+        reporter: dotnet-coverage
