@@ -4,53 +4,60 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-import CreateAdminForm from "./CreateAdminForm";
-import CustomerTable, { Customer } from "./CustomerTable";
+import { Customer } from "./CustomerTable";
+import { parseJwt } from "./jwt-utils";
+import AdminDashboard from "./AdminDashboard";
+import CustomerDashboard from "./CustomerDashboard";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5002";
 
 export default function Home() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [authView, setAuthView] = useState<"none" | "login" | "register" | "create_admin">("none");
+  const [user, setUser] = useState<Customer | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [authView, setAuthView] = useState<"none" | "login" | "register">("none");
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadCustomers() {
-      setLoading(true);
-      setError(null);
-      try {
-        const headers: HeadersInit = {};
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const res = await fetch(`${API_BASE}/api/customer`, { headers });
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        const data = await res.json();
-        if (mounted) {
-          setCustomers(Array.isArray(data) ? (data as Customer[]) : []);
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (mounted) setError(msg || "Failed to fetch customers");
-      } finally {
-        if (mounted) setLoading(false);
+    if (role === "User" && token) {
+      const decodedToken = parseJwt(token);
+      const userId = decodedToken?.nameid;
+      if (userId) {
+        fetchUserData(userId);
       }
     }
+  }, [token, role]);
 
-    loadCustomers();
-    return () => {
-      mounted = false;
-    };
-  }, [token]);
+  async function fetchUserData(userId: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const headers: HeadersInit = { Authorization: `Bearer ${token}` };
+      const res = await fetch(`${API_BASE}/api/customer/${userId}`, { headers });
+      if (!res.ok) throw new Error(`Failed to fetch user data: ${res.status} ${res.statusText}`);
+      const data = await res.json();
+      setUser(data);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleAuthSuccess = (newToken: string) => {
     setToken(newToken);
+    const decoded = parseJwt(newToken);
+    const userRole = decoded?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+    setRole(userRole);
     setAuthView("none");
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    setRole(null);
   };
 
   return (
@@ -59,7 +66,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Image src="/next.svg" alt="Next.js" width={80} height={20} />
-            <h1 className="text-2xl font-semibold">Customers</h1>
+            <h1 className="text-2xl font-semibold">InvestmentApp</h1>
           </div>
           <div className="flex gap-2">
             {!token ? (
@@ -76,16 +83,10 @@ export default function Home() {
                 >
                   Register
                 </button>
-                <button
-                  onClick={() => setAuthView(authView === "create_admin" ? "none" : "create_admin")}
-                  className="rounded bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
-                >
-                  Create Admin
-                </button>
               </>
             ) : (
               <button
-                onClick={() => setToken(null)}
+                onClick={handleLogout}
                 className="rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
               >
                 Logout
@@ -102,11 +103,17 @@ export default function Home() {
           <RegisterForm apiBase={API_BASE} onRegisterSuccess={handleAuthSuccess} />
         )}
 
-        {authView === "create_admin" && !token && (
-          <CreateAdminForm apiBase={API_BASE} onCreateSuccess={handleAuthSuccess} />
+        {token && role === "Admin" && (
+          <AdminDashboard token={token} apiBase={API_BASE} />
         )}
 
-        <CustomerTable customers={customers} loading={loading} error={error} />
+        {token && role === "User" && (
+          <>
+            {loading && <div>Loading your details...</div>}
+            {error && <div className="text-red-600">Error: {error}</div>}
+            {user && <CustomerDashboard user={user} />}
+          </>
+        )}
       </main>
     </div>
   );
