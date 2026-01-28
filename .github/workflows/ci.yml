@@ -43,7 +43,7 @@ jobs:
       run: npm run build --if-present
       working-directory: ./web/investment-app-ui
     - name: Test
-      run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+      run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults/
     - name: Test UI
       run: npm test --if-present
       working-directory: ./web/investment-app-ui
@@ -52,14 +52,17 @@ jobs:
       if: always()
       with:
         name: Test Results
-        path: "**/test-results.trx"
+        path: "./TestResults/test-results.trx"
         reporter: dotnet-trx
-    - name: Code Coverage Report
-      uses: irongut/CodeCoverageSummary@v1.3.0
+    - name: Install ReportGenerator tool
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+    - name: Generate Code Coverage Report
+      run: reportgenerator -reports:./TestResults/**/*.cobertura.xml -targetdir:./TestResults/CoverageReport -reporttypes:Html
+      # The file format might be 'coverage.cobertura.xml' depending on the version/settings
+      
+    - name: Upload coverage report as artifact
+      uses: actions/upload-artifact@v4
       with:
-        filename: '**/*.cobertura.xml'
-        badge: true
-        format: 'markdown'
-        output: 'both'
-    - name: Add Coverage to Job Summary
-      run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
+        name: Code-Coverage-Report
+        path: ./TestResults/CoverageReport/
