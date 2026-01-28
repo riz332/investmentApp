@@ -51,10 +51,12 @@ jobs:
         name: Test Results
         path: "**/test-results.trx"
         reporter: dotnet-trx
-    - name: Report code coverage
-      uses: dorny/test-reporter@v1
-      if: always()
+    - name: Code Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
       with:
-        name: Code Coverage
-        path: "**/coverage.cobertura.xml"
-        reporter: dotnet-coverage
+        filename: '**/coverage.cobertura.xml'
+        badge: true
+        format: 'markdown'
+        output: 'both'
+    - name: Add Coverage to Job Summary
+      run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
