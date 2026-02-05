@@ -58,7 +58,7 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [API_BASE]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
