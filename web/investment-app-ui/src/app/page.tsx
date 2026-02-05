@@ -20,16 +20,7 @@ export default function Home() {
   const [authView, setAuthView] = useState<"none" | "login" | "register">("none");
 
   useEffect(() => {
-    if (role === "User" && token) {
-      const decodedToken = parseJwt(token);
-      const userId = decodedToken?.nameid;
-      if (userId) {
-        fetchUserData(userId);
-      }
-    }
-  }, [token, role]);
-
-  async function fetchUserData(userId: string) {
+    async function fetchUserData(userId: string) {
     setLoading(true);
     setError(null);
     try {
@@ -45,6 +36,15 @@ export default function Home() {
       setLoading(false);
     }
   }
+
+    if (role === "User" && token) {
+      const decodedToken = parseJwt(token);
+      const userId = decodedToken?.nameid;
+      if (userId) {
+        fetchUserData(userId);
+      }
+    }
+  }, [token, role]);
 
   const handleAuthSuccess = (newToken: string) => {
     setToken(newToken);

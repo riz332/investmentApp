@@ -58,7 +58,7 @@ jobs:
       run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
     - name: Generate Code Coverage Report
-      run: reportgenerator -reports:./TestResults/**/*.cobertura.xml -targetdir:./TestResults/CoverageReport -reporttypes:Html
+      run: reportgenerator -reports:./TestResults/**/*.cobertura.xml -targetdir:./TestResults/CoverageReport "-reporttypes:Html;Cobertura"
       # The file format might be 'coverage.cobertura.xml' depending on the version/settings
       
     - name: Upload coverage report as artifact
@@ -66,3 +66,10 @@ jobs:
       with:
         name: Code-Coverage-Report
         path: ./TestResults/CoverageReport/
+
+    - name: Publish Code Coverage Report
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: ./TestResults/CoverageReport/Cobertura.xml
+        minimum_coverage: 0
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
